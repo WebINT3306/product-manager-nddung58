@@ -4,8 +4,314 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý Sản phẩm</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #1f3b73;
+    }
+
+    .form-section,
+    .table-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 11px 16px;
+      background: #1f6feb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #1558c0;
+    }
+
+    .message {
+      margin-top: 12px;
+      min-height: 20px;
+      font-size: 14px;
+      color: #d93025;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+    }
+
+    thead {
+      background: #1f3b73;
+      color: white;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #f9fbff;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #eef3fb;
+    }
+
+    tbody tr:hover {
+      background: #dfeaff;
+    }
+
+    .price-cell {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 14px;
+      }
+
+      th, td {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Quản lý Danh sách Sản phẩm</h1>
 
+    <div class="form-section">
+      <h2>Thêm sản phẩm mới</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="input-name">Tên sản phẩm</label>
+          <input id="input-name" type="text" placeholder="Nhập tên sản phẩm">
+        </div>
+
+        <div class="form-group">
+          <label for="input-category">Danh mục</label>
+          <input id="input-category" type="text" placeholder="Nhập danh mục">
+        </div>
+
+        <div class="form-group">
+          <label for="input-price">Đơn giá</label>
+          <input id="input-price" type="number" placeholder="Nhập đơn giá">
+        </div>
+
+        <div class="form-group">
+          <label for="input-quantity">Số lượng</label>
+          <input id="input-quantity" type="number" placeholder="Nhập số lượng">
+        </div>
+
+        <div class="form-group">
+          <button id="btn-add" type="button">Thêm sản phẩm</button>
+        </div>
+      </div>
+      <div class="message" id="message"></div>
+    </div>
+
+    <div class="table-section">
+      <h2>Danh sách sản phẩm</h2>
+      <table id="product-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th id="name-header" class="sortable">Tên sản phẩm</th>
+            <th>Danh mục</th>
+            <th>Đơn giá</th>
+            <th>Số lượng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dữ liệu sẽ được render tại đây -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let sortAsc = true;
+
+    const tableBody = document.querySelector('#product-table tbody');
+    const btnAdd = document.getElementById('btn-add');
+    const inputName = document.getElementById('input-name');
+    const inputCategory = document.getElementById('input-category');
+    const inputPrice = document.getElementById('input-price');
+    const inputQuantity = document.getElementById('input-quantity');
+    const message = document.getElementById('message');
+    const nameHeader = document.getElementById('name-header');
+
+    function formatPrice(price) {
+      return Number(price).toLocaleString('vi-VN') + ' VNĐ';
+    }
+
+    function updateSortIcon() {
+      const arrow = sortAsc ? ' ▲' : ' ▼';
+      nameHeader.textContent = 'Tên sản phẩm' + arrow;
+    }
+
+    function renderTable() {
+      tableBody.innerHTML = '';
+
+      products.forEach(function(product, index) {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${product.name}</td>
+          <td>${product.category || ''}</td>
+          <td class="price-cell">${formatPrice(product.price)}</td>
+          <td>${product.quantity}</td>
+        `;
+
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function loadProducts() {
+      const xhr = new XMLHttpRequest();
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          products = JSON.parse(xhr.responseText);
+          renderTable();
+        }
+      };
+
+      xhr.open('GET', 'products.json');
+      xhr.send();
+    }
+
+    function sortByName() {
+      products.sort(function(a, b) {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+
+        if (nameA < nameB) return sortAsc ? -1 : 1;
+        if (nameA > nameB) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      updateSortIcon();
+      renderTable();
+      sortAsc = !sortAsc;
+    }
+
+    function validateInput(name, price, quantity) {
+      if (name.trim() === '' || name.trim().length < 3) {
+        return 'Tên sản phẩm phải có ít nhất 3 ký tự.';
+      }
+
+      if (isNaN(price) || Number(price) <= 0) {
+        return 'Đơn giá phải là số dương.';
+      }
+
+      if (!Number.isInteger(Number(quantity)) || Number(quantity) < 1) {
+        return 'Số lượng phải là số nguyên lớn hơn hoặc bằng 1.';
+      }
+
+      return '';
+    }
+
+    function resetForm() {
+      inputName.value = '';
+      inputCategory.value = '';
+      inputPrice.value = '';
+      inputQuantity.value = '';
+    }
+
+    function addProduct() {
+      const name = inputName.value;
+      const category = inputCategory.value;
+      const price = inputPrice.value;
+      const quantity = inputQuantity.value;
+
+      const error = validateInput(name, price, quantity);
+
+      if (error) {
+        message.style.color = '#d93025';
+        message.textContent = error;
+        return;
+      }
+
+      const newProduct = {
+        id: products.length ? Math.max(...products.map(function(p) { return p.id; })) + 1 : 1,
+        name: name.trim(),
+        category: category.trim(),
+        price: Number(price),
+        quantity: Number(quantity)
+      };
+
+      products.push(newProduct);
+      renderTable();
+      resetForm();
+
+      message.style.color = 'green';
+      message.textContent = 'Thêm sản phẩm thành công.';
+    }
+
+    btnAdd.addEventListener('click', addProduct);
+    nameHeader.addEventListener('click', sortByName);
+
+    loadProducts();
+  </script>
 </body>
 </html>
